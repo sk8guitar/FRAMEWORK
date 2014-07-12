@@ -106,18 +106,35 @@ class admin extends Controller
 		//SE TENTAR ADD ARQUIVO ELE ENTRA AQUI
 		if(!empty($_FILES))
 		{
+
 			//PEGO O NOME DA CHAVE DO ARRAY $_FILES
-			$key = array_keys($_FILES);
-			
+			$key = array_keys($_FILES);			
+
 			//SE NÃO OCORRER NENHUM ERRO ELE FAZ O UPLOAD
 			if(!($_FILES[$key[0]]['error']))
 			{
-				//CRIO O OBJETO DEFININDO O NOME DA PASTA
-				$upload = new ImageHelper( FILES );
-				//FAZ O UPLOAD E RETORNA O NOME DO ARQUIVO INSERINDO NO ARRAY $_POST PARA UPLOAD
-				$_POST[$key[0]] = $upload -> ResizeByUpload( $_FILES[ $key[0] ]);
+				if($_FILES[$key[0]]['type'] == "image/png" || $_FILES[$key[0]]['type'] == "image/jpeg")
+				{
+					//CRIO O OBJETO DEFININDO O NOME DA PASTA
+					$upload = new ImageHelper( FILES );
+					//FAZ O UPLOAD E RETORNA O NOME DO ARQUIVO INSERINDO NO ARRAY $_POST PARA UPLOAD
+					$_POST[$key[0]] = $upload -> ResizeByUpload( $_FILES[ $key[0] ]);
+				}
+				else
+				{
+					$aux = explode(".", $_FILES[$key[0]]['name']);
+					$extarq = $aux[count($aux)-1];
+					$nomearq = ereg_replace( "[^a-zA-Z0-9_]", "", strtr( $_FILES[$key[0]]['name'], "áàãâéêíóôõúüçÁÀÃÂÉÊÍÓÔÕÚÜÇ ", "aaaaeeiooouucAAAAEEIOOOUUC_" ) );
+					$nomearq = strtolower( $nomearq ) . "." . $extarq;
+					$nomearq = md5(uniqid(time())).$nomearq;
+					if (move_uploaded_file($_FILES[$key[0]]['tmp_name'], FILES . $nomearq))
+					{
+						$_POST[$key[0]] = $nomearq;
+					}
+				}
 			}
 		}
+
 
 		//SE EXISTIR DADOS EM POST ADD AO BANCO
 		if($_POST)
@@ -161,14 +178,29 @@ class admin extends Controller
 			//SE NÃO OCORRER NENHUM ERRO ELE FAZ O UPLOAD
 			if(!($_FILES[$key[0]]['error']))
 			{
-				//EXCLUI O ARQUIVO ALTERADO
-				$imagem = $this -> bd -> readLine($where);
-				unlink( FILES . $imagem[$key[0]]);
+				if($_FILES[$key[0]]['type'] == "image/png" || $_FILES[$key[0]]['type'] == "image/jpeg")
+				{
+					//EXCLUI O ARQUIVO ALTERADO
+					$imagem = $this -> bd -> readLine($where);
+					unlink( FILES . $imagem[$key[0]]);
 
-				//CRIO O OBJETO DEFININDO O NOME DA PASTA
-				$upload = new ImageHelper( FILES );
-				//FAZ O UPLOAD E RETORNA O NOME DO ARQUIVO INSERINDO NO ARRAY $_POST PARA UPLOAD
-				$_POST[$key[0]] = $upload -> ResizeByUpload( $_FILES[ $key[0] ]);
+					//CRIO O OBJETO DEFININDO O NOME DA PASTA
+					$upload = new ImageHelper( FILES );
+					//FAZ O UPLOAD E RETORNA O NOME DO ARQUIVO INSERINDO NO ARRAY $_POST PARA UPLOAD
+					$_POST[$key[0]] = $upload -> ResizeByUpload( $_FILES[ $key[0] ] );
+				}
+				else
+				{
+					$aux = explode(".", $_FILES[$key[0]]['name']);
+					$extarq = $aux[count($aux)-1];
+					$nomearq = ereg_replace( "[^a-zA-Z0-9_]", "", strtr( $_FILES[$key[0]]['name'], "áàãâéêíóôõúüçÁÀÃÂÉÊÍÓÔÕÚÜÇ ", "aaaaeeiooouucAAAAEEIOOOUUC_" ) );
+					$nomearq = strtolower( $nomearq ) . "." . $extarq;
+					$nomearq = md5(uniqid(time())).$nomearq;
+					if (move_uploaded_file($_FILES[$key[0]]['tmp_name'], FILES . $nomearq))
+					{
+						$_POST[$key[0]] = $nomearq;
+					}
+				}
 			}
 		}
 		
